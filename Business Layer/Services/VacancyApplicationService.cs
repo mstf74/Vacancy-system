@@ -50,6 +50,7 @@ namespace Business_Layer.Services
                 include: a => a.Include(u => u.User).Include(u => u.Vacancy))
                 .Select(a => new ShowApplicationDto()
                 {
+                    ApplicantId = " ",
                     ApplicantName = a.User.UserName,
                     VacancyId=a.VacancyId,
                     VacancyName = a.Vacancy.Name,

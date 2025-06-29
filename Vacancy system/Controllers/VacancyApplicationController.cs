@@ -13,7 +13,6 @@ namespace Vacancy_system.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-    [Authorize(Roles ="Applicant")]
 
     public class VacancyApplicationController : ControllerBase
     {
@@ -26,8 +25,9 @@ namespace Vacancy_system.Controllers
             _applicationService = applicationService;
             _applicationValidator = applicationValidator;
         }
-        [HttpGet]
-        public IActionResult Apply(VacancyApplicationDto application)
+        [Authorize(Roles = "Applicant")]
+        [HttpPost]
+        public IActionResult Apply([FromForm]VacancyApplicationDto application)
         {
             var validationRestult = _applicationValidator.Validate(application);
             if (!validationRestult.IsValid)
@@ -40,11 +40,12 @@ namespace Vacancy_system.Controllers
             var result = _applicationService.Apply(application.VaccancyId, applicantId, uploadPath);
             if (!result.Success)
             {
-                var errordetails = CreateVaidationErrorDetails.CreateVaidationDetails("vacancyApplication","couldn't apply for the vacanccy");
+                var errordetails = CreateVaidationErrorDetails.CreateVaidationDetails("vacancyApplication",result.Error);
                 return BadRequest(errordetails);
             }
-            return Created("api/VacancyApplicationController/Apply",result.Date);
+            return Created("api/VacancyApplicationController/Apply"," Applied sucessfully");
         }
+        [Authorize(Roles = "Applicant")]
         [HttpGet]
         public IActionResult GetUserApplications()
         {
@@ -55,7 +56,7 @@ namespace Vacancy_system.Controllers
             return Ok(applications);
         }
         [HttpGet]
-        [Authorize(Roles ="Employer")]
+        [Authorize(Roles = "Employer")]
         public IActionResult GetVacancyApplications(int vacancyId)
         {
             var applications = _applicationService.GetVacancyApplications(vacancyId);
@@ -76,7 +77,7 @@ namespace Vacancy_system.Controllers
             {
                  file.CopyTo(stream);
             }
-            return fileName;
+            return filePath;
         }
     }
 }

@@ -47,7 +47,8 @@ namespace Vacancy_system.Controllers
                 return BadRequest(errorDetails);
             }
             var token = await _accountService.GeneratToken(Account.Email);
-            return Ok(token);
+            return Created("api/AccountController/Register",token);
+
         }
         [HttpPost]
         public async Task<IActionResult> Login(LoginDto Account)
@@ -69,7 +70,6 @@ namespace Vacancy_system.Controllers
             }
             var token = await _accountService.GeneratToken(Account.Email);
             return Ok(token);
-            
         }
     }
 }

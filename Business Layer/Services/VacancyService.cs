@@ -43,8 +43,6 @@ namespace Business_Layer.Services
             }).ToList();
             return vacancies;
         }
-
-
         public ShowVacanyDto GetById(int id)
         {
             var existedVacancy = _vacancyRepo.GetFilter(
@@ -53,13 +51,15 @@ namespace Business_Layer.Services
                 ).FirstOrDefault();
             if (existedVacancy is null)
                 return null;
+            var seats = _applicationRepo.GetFilter(filter: a=> a.VacancyId == id).Count();
             var vacancy = new ShowVacanyDto()
             {
                 Id = existedVacancy.Id,
                 Name = existedVacancy.Name,
                 Description = existedVacancy.Description,
-                MaxNumber= existedVacancy.MaxNumber,
-                ExpiryDate= existedVacancy.ExpiryDate,
+                MaxNumber = existedVacancy.MaxNumber,
+                RemainSeats = existedVacancy.MaxNumber - seats,
+                ExpiryDate = existedVacancy.ExpiryDate,
                 IsActive = existedVacancy.IsActive,
                 CreatedBy = existedVacancy.Employer.UserName
             };
@@ -67,6 +67,7 @@ namespace Business_Layer.Services
         }
         public List<ShowVacanyDto> GetByName(string name)
         {
+
             return _vacancyRepo.GetFilter(filter: a => a.Name.Contains(name), include: a => a.Include(v => v.Employer))
                 .Select(v => new ShowVacanyDto()
                 {
