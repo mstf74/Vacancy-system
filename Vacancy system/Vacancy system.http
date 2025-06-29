@@ -1,0 +1,6 @@
+@Vacancy_system_HostAddress = http://localhost:5224
+
+GET {{Vacancy_system_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
