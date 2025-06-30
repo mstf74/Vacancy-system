@@ -1,11 +1,11 @@
-﻿using Business_Layer.Dtos;
-using Data_Access_Layer.Models;
-using Microsoft.EntityFrameworkCore.Migrations.Operations.Builders;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Business_Layer.Dtos;
+using Data_Access_Layer.Models;
+using Microsoft.EntityFrameworkCore.Migrations.Operations.Builders;
 
 namespace Business_Layer.ServicesInterfaces
 {
@@ -16,6 +16,6 @@ namespace Business_Layer.ServicesInterfaces
         List<ShowApplicationDto> GetUserApplications(string applicantId);
         List<ShowApplicationDto> GetVacancyApplications(int vacancyId);
 
-        // search for vacancy by name 
+        // search for vacancy by name
     }
 }

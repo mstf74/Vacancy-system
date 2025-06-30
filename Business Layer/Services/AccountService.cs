@@ -1,29 +1,34 @@
-﻿using Business_Layer.Dtos;
-using Business_Layer.ServicesInterfaces;
-using Data_Access_Layer.Enums;
-using Data_Access_Layer.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Business_Layer.Dtos;
+using Business_Layer.ServicesInterfaces;
+using Data_Access_Layer.Enums;
+using Data_Access_Layer.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Business_Layer.Services
 {
-    public class AccountService: IAccountService
+    public class AccountService : IAccountService
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configurationManager;
-        public AccountService(UserManager<ApplicationUser> userManager, IConfiguration configurationManager)
+
+        public AccountService(
+            UserManager<ApplicationUser> userManager,
+            IConfiguration configurationManager
+        )
         {
             _userManager = userManager;
             _configurationManager = configurationManager;
         }
+
         public async Task<IdentityResult> Register(RegisterDto userDto)
         {
             // email, username, phone number and Rule is validated by the RegisterDtoValidator.
@@ -31,6 +36,7 @@ namespace Business_Layer.Services
             var RegisterationResult = await _userManager.CreateAsync(userModel, userDto.password);
             return RegisterationResult;
         }
+
         public async Task<IdentityResult> Login(LoginDto userDto)
         {
             // email and not existed user is validated by the LoginDtoVAlidator.
@@ -39,12 +45,15 @@ namespace Business_Layer.Services
             if (result)
                 return IdentityResult.Success;
             else
-                return IdentityResult.Failed(errors: new IdentityError()
-                {
-                    Code = "invalidPassword",
-                    Description = "Invalid password"
-                });
+                return IdentityResult.Failed(
+                    errors: new IdentityError()
+                    {
+                        Code = "invalidPassword",
+                        Description = "Invalid password",
+                    }
+                );
         }
+
         public async Task<string> GeneratToken(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
@@ -53,7 +62,7 @@ namespace Business_Layer.Services
             var secret = _configurationManager["Jwt:Key"];
             var minutes = _configurationManager["Jwt:ExpiryDate"];
             int expiryDate;
-            if(!int.TryParse(minutes, out expiryDate ))
+            if (!int.TryParse(minutes, out expiryDate))
             {
                 expiryDate = 30;
             }
@@ -64,7 +73,7 @@ namespace Business_Layer.Services
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, email),
-                new Claim(ClaimTypes.Role , user.Rule.ToString())
+                new Claim(ClaimTypes.Role, user.Rule.ToString()),
             };
             var token = new JwtSecurityToken(
                 issuer: _configurationManager["Jwt:Issuer"],
@@ -72,10 +81,10 @@ namespace Business_Layer.Services
                 claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(expiryDate),
                 signingCredentials: cred
-                );
+            );
             return new JwtSecurityTokenHandler().WriteToken(token);
-
         }
+
         private ApplicationUser MapDtoToModel(RegisterDto userDto)
         {
             var userModel = new ApplicationUser
@@ -83,7 +92,7 @@ namespace Business_Layer.Services
                 UserName = userDto.UserName,
                 Email = userDto.Email,
                 PhoneNumber = userDto.phonenumber,
-                Rule = userDto.Rule
+                Rule = userDto.Rule,
             };
             return userModel;
         }

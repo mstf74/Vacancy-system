@@ -9,6 +9,6 @@ namespace Data_Access_Layer.Enums
     public enum Rules
     {
         Applicant,
-        Employer
+        Employer,
     }
 }

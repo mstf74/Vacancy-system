@@ -1,17 +1,17 @@
-﻿using Business_Layer.Dtos;
-using Business_Layer.ServicesInterfaces;
-using Data_Access_Layer.Models;
-using Data_Access_Layer.RepositriesInterfaces;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-using Microsoft.EntityFrameworkCore.Update.Internal;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design.Serialization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Business_Layer.Dtos;
+using Business_Layer.ServicesInterfaces;
+using Data_Access_Layer.Models;
+using Data_Access_Layer.RepositriesInterfaces;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using Microsoft.EntityFrameworkCore.Update.Internal;
 
 namespace Business_Layer.Services
 {
@@ -19,39 +19,49 @@ namespace Business_Layer.Services
     {
         private readonly IGenericRepo<Vacancy> _vacancyRepo;
         private readonly IGenericRepo<VacancyApplication> _applicationRepo;
-        public VacancyService(IGenericRepo<Vacancy> vacancyRepo, IGenericRepo<VacancyApplication> applicationRepo)
+
+        public VacancyService(
+            IGenericRepo<Vacancy> vacancyRepo,
+            IGenericRepo<VacancyApplication> applicationRepo
+        )
         {
             _vacancyRepo = vacancyRepo;
             _applicationRepo = applicationRepo;
         }
+
         public List<ShowVacanyDto> GetAll()
         {
-            var ExistedVacanciesList = _vacancyRepo.GetFilter(include: q => q.Include( v=> v.Employer));
+            var ExistedVacanciesList = _vacancyRepo.GetFilter(include: q =>
+                q.Include(v => v.Employer)
+            );
             if (ExistedVacanciesList is null)
                 return null;
             var takenSeats = VacanciesApplicationsCount();
-            var vacancies = ExistedVacanciesList.Select(v => new ShowVacanyDto()
-            {
-                Id = v.Id,
-                Name = v.Name,
-                Description = v.Description,
-                MaxNumber = v.MaxNumber,
-                ExpiryDate = v.ExpiryDate,
-                RemainSeats = v.MaxNumber - (takenSeats.TryGetValue(v.Id , out int count)? count : 0),
-                IsActive = v.IsActive && v.ExpiryDate > DateTime.UtcNow,
-                CreatedBy = v.Employer.UserName
-            }).ToList();
+            var vacancies = ExistedVacanciesList
+                .Select(v => new ShowVacanyDto()
+                {
+                    Id = v.Id,
+                    Name = v.Name,
+                    Description = v.Description,
+                    MaxNumber = v.MaxNumber,
+                    ExpiryDate = v.ExpiryDate,
+                    RemainSeats =
+                        v.MaxNumber - (takenSeats.TryGetValue(v.Id, out int count) ? count : 0),
+                    IsActive = v.IsActive && v.ExpiryDate > DateTime.UtcNow,
+                    CreatedBy = v.Employer.UserName,
+                })
+                .ToList();
             return vacancies;
         }
+
         public ShowVacanyDto GetById(int id)
         {
-            var existedVacancy = _vacancyRepo.GetFilter(
-                filter : v => v.Id == id,
-                include : q => q.Include(v => v.Employer)
-                ).FirstOrDefault();
+            var existedVacancy = _vacancyRepo
+                .GetFilter(filter: v => v.Id == id, include: q => q.Include(v => v.Employer))
+                .FirstOrDefault();
             if (existedVacancy is null)
                 return null;
-            var seats = _applicationRepo.GetFilter(filter: a=> a.VacancyId == id).Count();
+            var seats = _applicationRepo.GetFilter(filter: a => a.VacancyId == id).Count();
             var vacancy = new ShowVacanyDto()
             {
                 Id = existedVacancy.Id,
@@ -61,14 +71,18 @@ namespace Business_Layer.Services
                 RemainSeats = existedVacancy.MaxNumber - seats,
                 ExpiryDate = existedVacancy.ExpiryDate,
                 IsActive = existedVacancy.IsActive,
-                CreatedBy = existedVacancy.Employer.UserName
+                CreatedBy = existedVacancy.Employer.UserName,
             };
             return vacancy;
         }
+
         public List<ShowVacanyDto> GetByName(string name)
         {
-
-            return _vacancyRepo.GetFilter(filter: a => a.Name.Contains(name), include: a => a.Include(v => v.Employer))
+            return _vacancyRepo
+                .GetFilter(
+                    filter: a => a.Name.Contains(name),
+                    include: a => a.Include(v => v.Employer)
+                )
                 .Select(v => new ShowVacanyDto()
                 {
                     Name = v.Name,
@@ -78,8 +92,10 @@ namespace Business_Layer.Services
                     IsActive = v.IsActive,
                     Description = v.Description,
                     ExpiryDate = v.ExpiryDate,
-                }).ToList();
+                })
+                .ToList();
         }
+
         public bool AddVacancy(VacancyDto vacancyDto, string EmployerId)
         {
             // vacancy dto validated using the validator;
@@ -88,10 +104,11 @@ namespace Business_Layer.Services
             bool result = _vacancyRepo.Add(vacancyModel);
             return result;
         }
-        public bool UpdateVacancy(int id,string employerId, VacancyDto vacancyDto)
+
+        public bool UpdateVacancy(int id, string employerId, VacancyDto vacancyDto)
         {
             var existingVacancy = GetOwnedVacancy(id, employerId);
-            if(existingVacancy is null)
+            if (existingVacancy is null)
                 return false;
             existingVacancy.Name = vacancyDto.Name;
             existingVacancy.Description = vacancyDto.Description;
@@ -100,14 +117,16 @@ namespace Business_Layer.Services
             bool result = _vacancyRepo.Update(existingVacancy);
             return result;
         }
+
         public bool RemoveVacancy(int id, string employerId)
         {
             var existingVacancy = GetOwnedVacancy(id, employerId);
-            if(existingVacancy is null)
-                return false ;
+            if (existingVacancy is null)
+                return false;
             bool result = _vacancyRepo.Delete(id);
             return result;
         }
+
         public bool DeActive(int id, string employerId)
         {
             var existingVacancy = GetOwnedVacancy(id, employerId);
@@ -115,16 +134,31 @@ namespace Business_Layer.Services
                 return false;
             existingVacancy.IsActive = false;
             bool result = _vacancyRepo.Update(existingVacancy);
-            return result ;
+            return result;
         }
-        private Dictionary<int,int> VacanciesApplicationsCount()
+
+        public async Task DeactiveExpirationVacancies()
         {
-            var counts = _applicationRepo.GetAll()
+            var expiredVacancies = _vacancyRepo.GetFilter(filter: v =>
+                v.ExpiryDate < DateTime.UtcNow
+            );
+            if (expiredVacancies.Count() == 0)
+                return;
+            foreach (var vac in expiredVacancies)
+                vac.IsActive = false;
+            await _vacancyRepo.SaveChangesAsync();
+        }
+
+        private Dictionary<int, int> VacanciesApplicationsCount()
+        {
+            var counts = _applicationRepo
+                .GetAll()
                 .GroupBy(v => v.VacancyId)
-                .ToDictionary(v => v.Key, v => v.Count()); 
+                .ToDictionary(v => v.Key, v => v.Count());
             return counts;
         }
-        private Vacancy MapDtoToModel(VacancyDto vacancyDto) 
+
+        private Vacancy MapDtoToModel(VacancyDto vacancyDto)
         {
             var vacancyModel = new Vacancy()
             {
@@ -136,12 +170,13 @@ namespace Business_Layer.Services
             };
             return vacancyModel;
         }
+
         private Vacancy GetOwnedVacancy(int id, string employerId)
         {
             var ExistingVacancy = _vacancyRepo.GetById(id);
             if (ExistingVacancy == null || ExistingVacancy.EmployerId != employerId)
                 return null;
-            return ExistingVacancy;   
+            return ExistingVacancy;
         }
     }
 }

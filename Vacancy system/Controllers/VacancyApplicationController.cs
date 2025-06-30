@@ -1,38 +1,47 @@
-﻿using Business_Layer.Dtos;
+﻿using System.Runtime.CompilerServices;
+using System.Security.Claims;
+using Business_Layer.Dtos;
 using Business_Layer.ServicesInterfaces;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing.Constraints;
-using System.Runtime.CompilerServices;
-using System.Security.Claims;
 using Vacancy_system.Helpers;
 
 namespace Vacancy_system.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-
     public class VacancyApplicationController : ControllerBase
     {
         private readonly IVacancyApplicationService _applicationService;
         private readonly IValidator<VacancyApplicationDto> _applicationValidator;
-        private readonly string _uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        private readonly string _uploadsPath = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "wwwroot",
+            "uploads"
+        );
 
-        public VacancyApplicationController(IVacancyApplicationService applicationService, IValidator<VacancyApplicationDto> applicationValidator)
+        public VacancyApplicationController(
+            IVacancyApplicationService applicationService,
+            IValidator<VacancyApplicationDto> applicationValidator
+        )
         {
             _applicationService = applicationService;
             _applicationValidator = applicationValidator;
         }
+
         [Authorize(Roles = "Applicant")]
         [HttpPost]
-        public IActionResult Apply([FromForm]VacancyApplicationDto application)
+        public IActionResult Apply([FromForm] VacancyApplicationDto application)
         {
             var validationRestult = _applicationValidator.Validate(application);
             if (!validationRestult.IsValid)
             {
-                var errorDetails = new HttpValidationProblemDetails(validationRestult.ToDictionary());
+                var errorDetails = new HttpValidationProblemDetails(
+                    validationRestult.ToDictionary()
+                );
                 return BadRequest(errorDetails);
             }
             var applicantId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -40,11 +49,15 @@ namespace Vacancy_system.Controllers
             var result = _applicationService.Apply(application.VaccancyId, applicantId, uploadPath);
             if (!result.Success)
             {
-                var errordetails = CreateVaidationErrorDetails.CreateVaidationDetails("vacancyApplication",result.Error);
+                var errordetails = CreateVaidationErrorDetails.CreateVaidationDetails(
+                    "vacancyApplication",
+                    result.Error
+                );
                 return BadRequest(errordetails);
             }
-            return Created("api/VacancyApplicationController/Apply"," Applied sucessfully");
+            return Created("api/VacancyApplicationController/Apply", " Applied sucessfully");
         }
+
         [Authorize(Roles = "Applicant")]
         [HttpGet]
         public IActionResult GetUserApplications()
@@ -55,15 +68,17 @@ namespace Vacancy_system.Controllers
                 return NotFound();
             return Ok(applications);
         }
+
         [HttpGet]
         [Authorize(Roles = "Employer")]
         public IActionResult GetVacancyApplications(int vacancyId)
         {
             var applications = _applicationService.GetVacancyApplications(vacancyId);
-            if(applications is null)
+            if (applications is null)
                 return NotFound();
             return Ok(applications);
         }
+
         private string UploadFile(IFormFile file)
         {
             if (!Directory.Exists(_uploadsPath))
@@ -71,11 +86,11 @@ namespace Vacancy_system.Controllers
                 Directory.CreateDirectory(_uploadsPath);
             }
             string fileExtension = Path.GetExtension(file.FileName);
-            var fileName =  Guid.NewGuid().ToString() + fileExtension;
+            var fileName = Guid.NewGuid().ToString() + fileExtension;
             string filePath = Path.Combine(_uploadsPath, fileName);
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                 file.CopyTo(stream);
+                file.CopyTo(stream);
             }
             return filePath;
         }

@@ -1,11 +1,11 @@
-﻿using Business_Layer.Dtos;
-using Data_Access_Layer.Models;
-using Microsoft.AspNetCore.Identity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Business_Layer.Dtos;
+using Data_Access_Layer.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace Business_Layer.ServicesInterfaces
 {

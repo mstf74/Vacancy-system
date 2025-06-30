@@ -1,9 +1,9 @@
-﻿using Business_Layer.Dtos;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Business_Layer.Dtos;
 
 namespace Business_Layer.ServicesInterfaces
 {
@@ -17,5 +17,6 @@ namespace Business_Layer.ServicesInterfaces
         bool UpdateVacancy(int id, string employerId, VacancyDto vacancyDto);
         bool RemoveVacancy(int id, string employerId);
         bool DeActive(int id, string employerId);
+        Task DeactiveExpirationVacancies();
     }
 }
