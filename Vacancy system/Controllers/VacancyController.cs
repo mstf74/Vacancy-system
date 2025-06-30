@@ -14,15 +14,15 @@ using Vacancy_system.Helpers;
 
 namespace Vacancy_system.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "Employer")]
-    public class VacanciesController : ControllerBase
+    public class VacancyController : ControllerBase
     {
         private readonly IVacancyService _vacancyService;
         private readonly IValidator<VacancyDto> _VacancyDtoValidator;
 
-        public VacanciesController(
+        public VacancyController(
             IVacancyService vacancyService,
             IValidator<VacancyDto> vacancyDtoValidator
         )
@@ -47,8 +47,8 @@ namespace Vacancy_system.Controllers
             return Ok(vacancies);
         }
 
-        [HttpGet]
-        public IActionResult GetById(int id)
+        [HttpGet(":id")]
+        public IActionResult GetById([FromRoute] int id)
         {
             var vacacncy = _vacancyService.GetById(id);
             if (vacacncy is null)
@@ -62,9 +62,9 @@ namespace Vacancy_system.Controllers
             return Ok(vacacncy);
         }
 
-        [HttpGet]
+        [HttpGet("name/:name")]
         [AllowAnonymous]
-        public IActionResult GetByName(string name)
+        public IActionResult GetByName([FromRoute] string name)
         {
             if (name is null || name.Length == 0)
             {
@@ -110,8 +110,8 @@ namespace Vacancy_system.Controllers
             return Ok("Added sucessfuly");
         }
 
-        [HttpPut]
-        public IActionResult Update(int id, VacancyDto vacancy)
+        [HttpPut(":id")]
+        public IActionResult Update([FromRoute] int id, [FromBody] VacancyDto vacancy)
         {
             var existedVacancy = _vacancyService.GetById(id);
             if (existedVacancy is null)
@@ -143,8 +143,8 @@ namespace Vacancy_system.Controllers
             return Ok("Updated successfuly");
         }
 
-        [HttpDelete]
-        public IActionResult Remove(int id)
+        [HttpDelete(":id")]
+        public IActionResult Remove([FromRoute] int id)
         {
             var employerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var result = _vacancyService.RemoveVacancy(id, employerId);
@@ -159,8 +159,8 @@ namespace Vacancy_system.Controllers
             return NoContent();
         }
 
-        [HttpPost]
-        public IActionResult Deactive(int id)
+        [HttpPost("Deactive/:id")]
+        public IActionResult Deactive([FromRoute] int id)
         {
             var employerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var result = _vacancyService.DeActive(id, employerId);
@@ -172,7 +172,7 @@ namespace Vacancy_system.Controllers
                 );
                 return BadRequest(error);
             }
-            return Ok("DeActived successfuly");
+            return Ok("Deactived successfuly");
         }
     }
 }

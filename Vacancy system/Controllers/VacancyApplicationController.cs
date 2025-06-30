@@ -11,7 +11,7 @@ using Vacancy_system.Helpers;
 
 namespace Vacancy_system.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    [Route("api/Vacancy/Application")]
     [ApiController]
     public class VacancyApplicationController : ControllerBase
     {
@@ -59,7 +59,7 @@ namespace Vacancy_system.Controllers
         }
 
         [Authorize(Roles = "Applicant")]
-        [HttpGet]
+        [HttpGet("User")]
         public IActionResult GetUserApplications()
         {
             var applicantId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -69,9 +69,9 @@ namespace Vacancy_system.Controllers
             return Ok(applications);
         }
 
-        [HttpGet]
+        [HttpGet(":id")]
         [Authorize(Roles = "Employer")]
-        public IActionResult GetVacancyApplications(int vacancyId)
+        public IActionResult GetVacancyApplications([FromRoute] int vacancyId)
         {
             var applications = _applicationService.GetVacancyApplications(vacancyId);
             if (applications is null)
